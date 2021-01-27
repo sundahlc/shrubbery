@@ -1,1 +1,1 @@
-web: sh setup.sh && streamlit run cube_app.py
+web: sh setup.sh && streamlit run shrubbery_server.py
