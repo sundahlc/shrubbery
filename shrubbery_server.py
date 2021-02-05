@@ -56,6 +56,15 @@ def story_time(conn):
     cur.close()
     return id, contents
 
+def modifier(conn):
+    cur = conn.cursor()
+    cur.execute("select id, contents from cards where type = 'modifier' and checkedout = False order by random() limit 1")
+    id, contents = cur.fetchone()
+    cur.execute(f"update cards set checkedout = True where id = {id}")
+    conn.commit()
+    cur.close()
+    return id, contents
+
 conn = connect_to_elephantsql()
 
 player = load_player()
@@ -70,15 +79,31 @@ if st.sidebar.button('Shuffle my cards back'):
     conn.commit()
     cur.close()
     player.reset()
+    
 column_1, column_2 = st.beta_columns([1,2])
 story_spot = column_2.empty()
 
 if column_1.button('Hit me'):
     # players_hand.cards.append(hit_me(cur))
     # try:
-    card_id, card_content, card_type = hit_me(conn)
-    player.cards[f'{card_type} | {card_content}'] = False
-    player.checkedout_ids.append(card_id)
+    has_modifier_card = False
+    for card in player.cards.keys():
+        if 'modifier' in card:
+            has_modifier_card = True
+            break
+        else:
+            pass
+    if has_modifier_card == False:
+        try:
+            card_id, card_content = modifier(conn)
+            player.cards[f'modifier | {card_content}'] = False
+            player.checkedout_ids.append(card_id)
+        except:
+            st.header("ah man we're all out of modifiers")
+    else:
+        card_id, card_content, card_type = hit_me(conn)
+        player.cards[f'{card_type} | {card_content}'] = False
+        player.checkedout_ids.append(card_id)
     # except:
     #     st.header('YOU RUN OUTTA CAHDS MATE')
 if column_1.button('Story time'):
@@ -88,6 +113,13 @@ if column_1.button('Story time'):
         player.checkedout_ids.append(card_id)
     except:
         st.header('YOU RUN OUTTA STORY CAHDS MATE')
+# if column_1.button('I need a modifier'):
+#     try:
+#         card_id, card_content = modifier(conn)
+#         player.cards[f'modifier | {card_content}'] = False
+#         player.checkedout_ids.append(card_id)
+#     except:
+#         st.header('No more modifier cards left!')
 if column_1.button('Burn this'):
     for card, ditch in player.cards.copy().items():
         if ditch:
