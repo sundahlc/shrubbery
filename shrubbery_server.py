@@ -84,28 +84,21 @@ column_1, column_2 = st.beta_columns([1,2])
 story_spot = column_2.empty()
 
 if column_1.button('Hit me'):
-    # players_hand.cards.append(hit_me(cur))
-    # try:
-    has_modifier_card = False
-    for card in player.cards.keys():
-        if 'modifier' in card:
-            has_modifier_card = True
-            break
-        else:
-            pass
-    if has_modifier_card == False:
-        try:
-            card_id, card_content = modifier(conn)
-            player.cards[f'modifier | {card_content}'] = False
-            player.checkedout_ids.append(card_id)
-        except:
-            st.header("ah man we're all out of modifiers")
-    else:
+    try:
         card_id, card_content, card_type = hit_me(conn)
         player.cards[f'{card_type} | {card_content}'] = False
         player.checkedout_ids.append(card_id)
-    # except:
-    #     st.header('YOU RUN OUTTA CAHDS MATE')
+    except:
+        st.header('YOU RUN OUTTA CAHDS MATE')
+
+if column_1.button('Gimme a modifier'):
+    try:
+        card_id, card_content = modifier(conn)
+        player.cards[f'modifier | {card_content}'] = False
+        player.checkedout_ids.append(card_id)
+    except:
+        st.header("ah man we're all out of modifiers")
+
 if column_1.button('Story time'):
     try:
         card_id, card_content = story_time(conn)
@@ -113,13 +106,7 @@ if column_1.button('Story time'):
         player.checkedout_ids.append(card_id)
     except:
         st.header('YOU RUN OUTTA STORY CAHDS MATE')
-# if column_1.button('I need a modifier'):
-#     try:
-#         card_id, card_content = modifier(conn)
-#         player.cards[f'modifier | {card_content}'] = False
-#         player.checkedout_ids.append(card_id)
-#     except:
-#         st.header('No more modifier cards left!')
+
 if column_1.button('Burn this'):
     for card, ditch in player.cards.copy().items():
         if ditch:
@@ -130,6 +117,6 @@ for card in player.cards.keys():
     player.cards[card] = column_2.checkbox(card, key=card)
 story_spot.markdown(f'### {player.story}')
 
-st.sidebar.write(repr(player.__dict__))
+# st.sidebar.write(repr(player.__dict__))
 
 conn.close()
