@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 import psycopg2
 import urllib.parse
 import os
@@ -9,6 +10,7 @@ class player():
         self.story = ''
         self.discard = []
         self.checkedout_ids = []
+        self.points = 20
 
     def reset(self):
         self.cards = {}
@@ -65,6 +67,11 @@ def modifier(conn):
     cur.close()
     return id, contents
 
+def get_all_modifiers(conn):
+    query = "SELECT contents, type FROM CARDS WHERE TYPE='modifier' OR TYPE='foreshadow'"
+    modifiers = pd.read_sql(query, conn)
+    return modifiers
+
 conn = connect_to_elephantsql()
 
 player = load_player()
@@ -116,6 +123,11 @@ if column_1.button('Burn this'):
 for card in player.cards.keys():
     player.cards[card] = column_2.checkbox(card, key=card)
 story_spot.markdown(f'### {player.story}')
+
+player_name = st.sidebar.text_input(label='name')
+if st.sidebar.button("I'm Mike"):
+    if player_name.lower() == 'mike':
+        st.table(get_all_modifiers(conn))
 
 # st.sidebar.write(repr(player.__dict__))
 
