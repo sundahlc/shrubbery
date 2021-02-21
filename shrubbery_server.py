@@ -68,7 +68,7 @@ def modifier(conn):
     return id, contents
 
 def get_all_modifiers(conn):
-    query = "SELECT contents, type FROM CARDS WHERE TYPE='modifier' OR TYPE='foreshadow'"
+    query = "SELECT contents, type FROM CARDS WHERE TYPE='modifier' OR TYPE='foreshadow' ORDER BY TYPE"
     modifiers = pd.read_sql(query, conn)
     return modifiers
 
@@ -123,6 +123,8 @@ if column_1.button('Burn this'):
 for card in player.cards.keys():
     player.cards[card] = column_2.checkbox(card, key=card)
 story_spot.markdown(f'### {player.story}')
+
+player.points = st.sidebar.number_input('points', min_value=0, max_value=None, value=player.points)
 
 player_name = st.sidebar.text_input(label='name')
 if st.sidebar.button("I'm Mike"):
