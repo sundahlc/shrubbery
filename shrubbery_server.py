@@ -60,12 +60,13 @@ def story_time(conn):
 
 def modifier(conn):
     cur = conn.cursor()
-    cur.execute("select id, contents from cards where type = 'modifier' and checkedout = False order by random() limit 1")
-    id, contents = cur.fetchone()
+    cur.execute('''select id, type, contents from cards where type = 'modifier' or type = 'foreshadow' 
+                    and checkedout = False order by random() limit 1''')
+    id, card_type, contents = cur.fetchone()
     cur.execute(f"update cards set checkedout = True where id = {id}")
     conn.commit()
     cur.close()
-    return id, contents
+    return id, card_type, contents
 
 def get_all_modifiers(conn):
     query = "SELECT contents, type FROM CARDS WHERE TYPE='modifier' OR TYPE='foreshadow' ORDER BY TYPE"
@@ -95,14 +96,16 @@ if column_1.button('Hit me'):
         card_id, card_content, card_type = hit_me(conn)
         player.cards[f'{card_type} | {card_content}'] = False
         player.checkedout_ids.append(card_id)
+        player.points = player.points - 1
     except:
         st.header('YOU RUN OUTTA CAHDS MATE')
 
 if column_1.button('Gimme a modifier'):
     try:
-        card_id, card_content = modifier(conn)
-        player.cards[f'modifier | {card_content}'] = False
+        card_id, card_type, card_content = modifier(conn)
+        player.cards[f'{card_type} | {card_content}'] = False
         player.checkedout_ids.append(card_id)
+        player.points = player.points - 2
     except:
         st.header("ah man we're all out of modifiers")
 
@@ -124,7 +127,7 @@ for card in player.cards.keys():
     player.cards[card] = column_2.checkbox(card, key=card)
 story_spot.markdown(f'### {player.story}')
 
-player.points = st.sidebar.number_input('points', min_value=0, max_value=None, value=player.points)
+player.points = column_2.number_input('points', min_value=0, max_value=None, value=player.points)
 
 player_name = st.sidebar.text_input(label='name')
 if st.sidebar.button("I'm Mike"):
