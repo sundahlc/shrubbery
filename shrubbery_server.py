@@ -42,7 +42,7 @@ def connect_to_elephantsql():
 
 def hit_me(conn):
     cur = conn.cursor()
-    cur.execute("select id, contents, type from cards where type != 'story' and checkedout = False order by random() limit 1")
+    cur.execute("select id, contents, type from cards where type = 'word' and checkedout = False order by random() limit 1")
     id, contents, type = cur.fetchone()
     cur.execute(f"update cards set checkedout = True where id = {id}")
     conn.commit()
