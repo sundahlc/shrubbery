@@ -200,3 +200,24 @@ if st.sidebar.button("I'm Mike"):
 # st.sidebar.write(repr(player.__dict__))
 
 conn.close()
+
+st.sidebar.markdown('### Rules reminder')
+rules = '''
+Word card = 1 point
+Modifier card = 2 points
+
+### Judging:
+Integrating your own cards: 
+- 2 points each
+
+Someone else integrates your cards:
+- 2 points for a word,
+- 3 points for a modifier
+
+### Creating elements:
+- 7 points for a character or other element
+- 5 points for a trait
+- 5 points to create your own modifier card
+- 5 points to create your own story card'''
+
+st.sidebar.markdown(rules)
