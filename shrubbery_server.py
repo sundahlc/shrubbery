@@ -153,7 +153,7 @@ if st.sidebar.button('Shuffle my cards back'):
 column_1, column_2 = st.beta_columns([1,2])
 story_spot = column_2.empty()
 
-if column_1.button('Hit me'):
+if column_1.button('Hit me with them words'):
     try:
         card_id, card_content, card_type = hit_me(conn)
         session_state.session_player.cards[f'{card_type} | {card_content}'] = False
