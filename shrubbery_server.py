@@ -192,10 +192,10 @@ story_spot.markdown(f'### {session_state.session_player.story}')
 session_state.session_player.points = column_2.number_input('points', min_value=0, max_value=None,
                                                             value=session_state.session_player.points)
 
-player_name = st.sidebar.text_input(label='name')
-if st.sidebar.button("I'm Mike"):
-    if player_name.lower() == 'mike':
-        st.table(get_all_modifiers(conn))
+# player_name = st.sidebar.text_input(label='name')
+# if st.sidebar.button("I'm Mike"):
+#     if player_name.lower() == 'mike':
+#         st.table(get_all_modifiers(conn))
 
 # st.sidebar.write(repr(player.__dict__))
 
@@ -218,6 +218,10 @@ Someone else integrates your cards:
 - 7 points for a character or other element
 - 5 points for a trait
 - 5 points to create your own modifier card
-- 5 points to create your own story card'''
+- 5 points to create your own story card
+- 5 points to create your own foreshadow card
+- 5 points to create your own question card
+- Doesn't include the points you load onto it!
+'''
 
 st.sidebar.markdown(rules)
