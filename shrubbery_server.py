@@ -192,6 +192,15 @@ def active_player(state):
         seconds = round(state.writing_time % 60)
         st.write(f'You wrote for {minutes}:{seconds}.')
 
+        if st.button('Pass turn'):
+            state.turn='passing'
+    if state.turn == 'passing':
+        next_player = st.sidebar.selectbox('Next player is', ('chris', 'mike', 'nick', 'christian'))
+        if st.sidebar.button('Pass to next player'):
+            with db_talker() as cur:
+                cur.execute('update players set active=false')
+                cur.execute(f"update players set active=true where name='{next_player}'")
+            state.turn='done'
 
 
 def end_writing(state):
@@ -200,7 +209,6 @@ def end_writing(state):
         cur.execute('select time from turn')
         t1 = cur.fetchone()[0]
         cur.execute('update cards set status=-1 where status=0')
-        cur.execute('update players set active=false')
 
     t2 = datetime.timestamp(datetime.now())
     state.writing_time = t2 - t1
