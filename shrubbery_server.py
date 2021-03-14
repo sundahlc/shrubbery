@@ -20,7 +20,7 @@ except ModuleNotFoundError:
 # MAIN PAGE
 #======================================================================================================================
 
-os.chdir(r'C:\Users\Kuri y Rizu\Documents\Synced Folders\Programming\shrubbery\shrubbery')
+# os.chdir(r'C:\Users\Kuri y Rizu\Documents\Synced Folders\Programming\shrubbery\shrubbery')
 
 def main():
     state = _get_state()
