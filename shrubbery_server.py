@@ -28,7 +28,7 @@ def main():
     loader_name = st.sidebar.text_input('name')
     # if st.sidebar.button('Load me up Scottie'):
     load_player(state, loader_name)
-    # st.sidebar.write(repr(state.player.__dict__))
+    st.sidebar.write(repr(state.player.__dict__))
 
     if state.player.active == True:
         if st.checkbox('pssst', value=False):
@@ -222,7 +222,7 @@ def show_columns(state):
                 if bool == True:
                     act_on_card(state, action.lower(), card_id)
 
-    point_display.number_input('Points', state.player.points, step=1)
+    real_points = point_display.number_input('Points', state.player.points, step=1)
 
 
     # Right Column
@@ -230,7 +230,8 @@ def show_columns(state):
     for card_id, contents in state.player.cards.items():
         state.selection[card_id] = column_2.checkbox(contents, value=False)
 
-
+    with db_talker() as cur:
+        cur.execute(f'''update players set points={real_points} where id={state.player.player_id}''')
 
 #======================================================================================================================
 # Session State
