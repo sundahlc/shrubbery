@@ -30,13 +30,15 @@ def main():
     load_player(state, loader_name)
     st.sidebar.write(repr(state.player.__dict__))
 
+    get_game_state(state)
+
     if state.player.active == True:
-        if st.checkbox('pssst', value=False):
+        if st.checkbox("it's your turn", value=False):
             active_player(state)
 
     show_columns(state)
 
-    # st.sidebar.write(repr(state.__dict__))
+    st.sidebar.write(repr(state.__dict__))
     if st.sidebar.button('Clear state'):
         state.clear()
 
@@ -162,6 +164,11 @@ def act_on_card(state, action, card_id):
         # cur.execute(f'''delete from hands where player_id={state.player.player_id} and card_id={card_id}''')
 
 
+def get_game_state(state):
+    with db_talker() as cur:
+        cur.execute('''select status from turn''')
+        state.turn = cur.fetchone()[0]
+
 #======================================================================================================================
 # Display flow
 #======================================================================================================================
@@ -176,7 +183,7 @@ def active_player(state):
     if st.button('See your cards & WRITE (timer starts immediately!)'):
         state.turn = 'writing'
         with db_talker() as cur:
-            cur.execute('update turn set accepting=false')
+            cur.execute("update turn set status='writing'")
             cur.execute(f'update turn set time={datetime.timestamp(datetime.now())}')
     if state.turn == 'writing':
         st.success('GO!')
@@ -188,24 +195,29 @@ def active_player(state):
             state.turn = 'judging'
             end_writing(state)
     if state.turn == 'judging':
-        minutes = round(state.writing_time // 60)
-        seconds = round(state.writing_time % 60)
+        minutes = str(round(state.writing_time // 60))
+        seconds = str(round(state.writing_time % 60))
+        if len(seconds) == 1:
+            seconds = '0' + seconds
         st.write(f'You wrote for {minutes}:{seconds}.')
 
         if st.button('Pass turn'):
             state.turn='passing'
+            with db_talker() as cur:
+                cur.execute("update turn set status='passing'")
     if state.turn == 'passing':
         next_player = st.sidebar.selectbox('Next player is', ('chris', 'mike', 'nick', 'christian'))
         if st.sidebar.button('Pass to next player'):
             with db_talker() as cur:
                 cur.execute('update players set active=false')
                 cur.execute(f"update players set active=true where name='{next_player}'")
-            state.turn='done'
+                cur.execute("update turn set status='accepting'")
+            state.turn='accepting'
 
 
 def end_writing(state):
     with db_talker() as cur:
-        cur.execute('update turn set accepting=true')
+        cur.execute("update turn set status='judging'")
         cur.execute('select time from turn')
         t1 = cur.fetchone()[0]
         cur.execute('update cards set status=-1 where status=0')
@@ -224,11 +236,20 @@ def show_columns(state):
         if column_1.button(text):
             draw_card(state, deck)
 
-    for action in ('Discard', 'Send'):
-        if st.button(action):
+    # for action in ('Discard', 'Send'):
+    if column_1.button('Discard'):
+        for card_id, bool in state.selection.items():
+            if bool == True:
+                act_on_card(state, 'discard', card_id)
+
+    if column_1.button('Send'):
+        if state.turn == 'accepting':
             for card_id, bool in state.selection.items():
                 if bool == True:
-                    act_on_card(state, action.lower(), card_id)
+                    act_on_card(state, 'send', card_id)
+
+        else:
+            column_1.write("You can't send cards now!")
 
     real_points = point_display.number_input('Points', state.player.points, step=1)
 
