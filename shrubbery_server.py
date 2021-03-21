@@ -251,7 +251,7 @@ def show_columns(state):
         else:
             column_1.write("You can't send cards now!")
 
-    real_points = point_display.number_input('Points', state.player.points, step=1)
+    real_points = point_display.number_input('Points', value=state.player.points, min_value=0, step=1)
 
 
     # Right Column
