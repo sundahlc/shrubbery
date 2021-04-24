@@ -28,8 +28,12 @@ def main():
     loader_name = st.sidebar.text_input('name')
     # if st.sidebar.button('Load me up Scottie'):
     load_player(state, loader_name)
-    st.sidebar.write(repr(state.player.__dict__))
-
+    # st.sidebar.write(repr(state.player.__dict__))
+    rules = '''
+    7 points to create a card on the \n
+    5 points to add a characteristic
+    '''
+    st.sidebar.write(rules)
     get_game_state(state)
 
     if state.player.active == True:
@@ -38,7 +42,7 @@ def main():
 
     show_columns(state)
 
-    st.sidebar.write(repr(state.__dict__))
+    # st.sidebar.write(repr(state.__dict__))
     if st.sidebar.button('Clear state'):
         state.clear()
 
@@ -164,6 +168,16 @@ def act_on_card(state, action, card_id):
         # cur.execute(f'''delete from hands where player_id={state.player.player_id} and card_id={card_id}''')
 
 
+def write_word(state):
+    word = st.text_input('Word to send')
+    if st.button("Send this word!"):
+        with db_talker as cur:
+            cur.execute("insert into cards (contents, type, deck) values (%s, 'word', 'normal' on conflict do nothing", (word,))
+            cur.execute("select id from cards where contents = %s", (word,))
+            card_id = cur.fetchone()[0]
+            cur.execute("update cards set status=0 where id=%s", (card_id,))
+        st.write("sent!")
+
 def get_game_state(state):
     with db_talker() as cur:
         cur.execute('''select status from turn''')
@@ -250,6 +264,10 @@ def show_columns(state):
 
         else:
             column_1.write("You can't send cards now!")
+
+    if column_1.button('Write my own card'):
+        if state.turn == 'accepting':
+            write_word(state)
 
     real_points = point_display.number_input('Points', value=state.player.points, min_value=0, step=1)
 
