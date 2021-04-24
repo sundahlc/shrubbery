@@ -169,14 +169,15 @@ def act_on_card(state, action, card_id):
 
 
 def write_word(state):
-    word = st.text_input('Word to send')
+    state.word_to_send = st.text_input('Word to send', state.word_to_send or '')
     if st.button("Send this word!"):
         with db_talker() as cur:
-            cur.execute(f"insert into cards (contents, type, checkedout, deck) values ('{word}', 'word', true, 'normal') on conflict do nothing")
-            cur.execute(f"select id from cards where contents='{word}'")
+            cur.execute(f"insert into cards (contents, type, checkedout, deck) values ('{state.word_to_send}', 'word', true, 'normal') on conflict do nothing")
+            cur.execute(f"select id from cards where contents='{state.word_to_send}'")
             card_id = cur.fetchone()[0]
             cur.execute(f"update cards set status=0 where id={card_id}")
         st.write("sent!")
+        state.write_card = False
 
 def get_game_state(state):
     with db_talker() as cur:
@@ -267,7 +268,9 @@ def show_columns(state):
 
     if column_1.button('Write my own card'):
         if state.turn == 'accepting':
-            write_word(state)
+            state.write_card = True
+    if state.write_card == True:
+        write_word(state)
 
     real_points = point_display.number_input('Points', value=state.player.points, min_value=0, step=1)
 
