@@ -171,11 +171,11 @@ def act_on_card(state, action, card_id):
 def write_word(state):
     word = st.text_input('Word to send')
     if st.button("Send this word!"):
-        with db_talker as cur:
-            cur.execute("insert into cards (contents, type, deck, status) values (%s, 'word', 'normal', 0) on conflict do nothing", (word,))
-            cur.execute("select id from cards where contents = %s", (word,))
+        with db_talker() as cur:
+            cur.execute(f"insert into cards (contents, type, checkedout, deck) values ('{word}', 'word', true, 'normal') on conflict do nothing")
+            cur.execute(f"select id from cards where contents='{word}'")
             card_id = cur.fetchone()[0]
-            cur.execute("update cards set status=0 where id=%s", (card_id,))
+            cur.execute(f"update cards set status=0 where id={card_id}")
         st.write("sent!")
 
 def get_game_state(state):
