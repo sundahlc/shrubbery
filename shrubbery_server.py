@@ -29,8 +29,9 @@ def main():
     # if st.sidebar.button('Load me up Scottie'):
     load_player(state, loader_name)
     # st.sidebar.write(repr(state.player.__dict__))
+    st.sidebar.markdown('### Agenda: ' + state.player.agenda.upper())
     rules = '''
-    7 points to create a card on the \n
+    7 points to create a card on the table\n
     5 points to add a characteristic
     '''
     st.sidebar.write(rules)
@@ -102,6 +103,7 @@ class player():
         self.story = ''
         self.points = 5
         self.active = False
+        self.agenda = ''
 
         with db_talker() as cur:
             cur.execute(f'''insert into players (name, active)
@@ -140,6 +142,8 @@ def load_player(state, name):
 
         cur.execute(f'''select active from players where id = {state.player.player_id}''')
         state.player.active = cur.fetchone()[0]
+        cur.execute(f'''select agenda from players where id = {state.player.player_id}''')
+        state.player.agenda = cur.fetchone()[0]
 
     for card in raw_hand_cards:
         id, contents, type = card
