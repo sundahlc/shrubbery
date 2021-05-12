@@ -314,7 +314,7 @@ def show_columns(state):
     # Right Column
     state.selection = dict()
     for card_id, contents in state.player.cards.items():
-        state.selection[card_id] = column_2.checkbox(contents, value=False)
+        state.selection[card_id] = column_2.checkbox(contents, value=False, key=card_id)
 
     with db_talker() as cur:
         cur.execute(f'''update players set points={real_points} where id={state.player.player_id}''')
