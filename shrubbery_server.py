@@ -234,7 +234,7 @@ def active_player(state):
                 cur.execute("update turn set status='passing'")
 
     if state.turn == 'passing':
-        next_player = st.sidebar.selectbox('Next player is', ('chris', 'mike', 'nick', 'christian'))
+        next_player = st.sidebar.selectbox('Next player is', ('chris', 'mike', 'nick', 'aryan'))
         if st.sidebar.button('Pass to next player'):
             with db_talker() as cur:
                 cur.execute('update players set active=false')
