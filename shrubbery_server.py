@@ -133,7 +133,7 @@ class player():
 
 def load_player(state, name):
     name = name.lower()
-    if name not in ('chris', 'mike', 'nick', 'christian'):
+    if name not in ('chris', 'mike', 'nick', 'christian', 'aryan'):
         st.sidebar.write("You're not really in this game!")
         st.stop()
     state.player = player(name)
