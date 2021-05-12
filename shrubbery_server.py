@@ -3,6 +3,7 @@ from datetime import datetime
 import psycopg2
 import urllib.parse
 import os
+from time import sleep
 
 import streamlit as st
 from streamlit.hashing import _CodeHasher
@@ -38,10 +39,13 @@ def main():
     get_game_state(state)
 
     if state.player.active == True:
-        if st.checkbox("it's your turn", value=False):
-            active_player(state)
+        active_player(state)
 
     show_columns(state)
+
+    if state.player.active == True and state.turn == 'accepting':
+        while True:
+            sleep(1)
 
     # st.sidebar.write(repr(state.__dict__))
     if st.sidebar.button('Clear state'):
@@ -183,36 +187,40 @@ def write_word(state):
         st.write("sent!")
         state.write_card = False
 
+
 def get_game_state(state):
     with db_talker() as cur:
         cur.execute('''select status from turn''')
         state.turn = cur.fetchone()[0]
 
+
 #======================================================================================================================
 # Display flow
 #======================================================================================================================
 
+
 def active_player(state):
     st.markdown(f"## HEY {state.player.name.upper()}! You're the active player!")
+    # state.countdown = st.empty()
     with db_talker() as cur:
         cur.execute('select type, contents from cards where status=0')
         active_cards = cur.fetchall()
     st.write(f"You have {len(active_cards)} cards sent ... so far.")
     st.button('Refresh! Do I have more cards?')
+
     if st.button('See your cards & WRITE (timer starts immediately!)'):
         state.turn = 'writing'
         with db_talker() as cur:
             cur.execute("update turn set status='writing'")
             cur.execute(f'update turn set time={datetime.timestamp(datetime.now())}')
+
     if state.turn == 'writing':
         st.success('GO!')
         for card in active_cards:
             type, contents = card
             st.write(type + ' | ' + contents)
+        timer(state)
 
-        if st.button('stop writing'):
-            state.turn = 'judging'
-            end_writing(state)
     if state.turn == 'judging':
         minutes = str(round(state.writing_time // 60))
         seconds = str(round(state.writing_time % 60))
@@ -224,6 +232,7 @@ def active_player(state):
             state.turn='passing'
             with db_talker() as cur:
                 cur.execute("update turn set status='passing'")
+
     if state.turn == 'passing':
         next_player = st.sidebar.selectbox('Next player is', ('chris', 'mike', 'nick', 'christian'))
         if st.sidebar.button('Pass to next player'):
@@ -231,7 +240,30 @@ def active_player(state):
                 cur.execute('update players set active=false')
                 cur.execute(f"update players set active=true where name='{next_player}'")
                 cur.execute("update turn set status='accepting'")
+                cur.execute(f'update turn set time={datetime.timestamp(datetime.now())}')
             state.turn='accepting'
+
+
+def timer(state):
+    with db_talker() as cur:
+        cur.execute('select time from turn')
+        t1 = cur.fetchone()[0]
+        cur.execute('update cards set status=-1 where status=0')
+
+    time_display = st.empty()
+    stop = st.button('stop writing')
+    while stop != True:
+        t2 = datetime.timestamp(datetime.now())
+        time_elapsed = t2 - t1
+        minutes = str(round(time_elapsed // 60))
+        seconds = str(round(time_elapsed % 60))
+        if len(seconds) == 1:
+            seconds = '0' + seconds
+        time_display.write(f'{minutes}:{seconds}')
+        sleep(1)
+
+    state.turn = 'judging'
+    end_writing(state)
 
 
 def end_writing(state):
