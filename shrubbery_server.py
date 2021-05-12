@@ -44,9 +44,9 @@ def main():
     show_columns(state)
 
     if state.player.active == True and state.turn == 'accepting':
-        while True:
-            sleep(1)
-
+        # while True:
+        #     sleep(1)
+        pass
     # st.sidebar.write(repr(state.__dict__))
     if st.sidebar.button('Clear state'):
         state.clear()
