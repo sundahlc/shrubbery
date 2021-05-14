@@ -133,7 +133,7 @@ class player():
 
 def load_player(state, name):
     name = name.lower()
-    if name not in ('chris', 'mike', 'nick', 'christian', 'aryan'):
+    if name not in ('chris', 'mike', 'nick', 'christian', 'aryan', 'caleb'):
         st.sidebar.write("You're not really in this game!")
         st.stop()
     state.player = player(name)
@@ -234,7 +234,7 @@ def active_player(state):
                 cur.execute("update turn set status='passing'")
 
     if state.turn == 'passing':
-        next_player = st.sidebar.selectbox('Next player is', ('chris', 'mike', 'nick', 'aryan'))
+        next_player = st.sidebar.selectbox('Next player is', ('aryan', 'caleb', 'chris', 'christian', 'mike', 'nick'))
         if st.sidebar.button('Pass to next player'):
             with db_talker() as cur:
                 cur.execute('update players set active=false')
