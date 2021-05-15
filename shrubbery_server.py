@@ -208,20 +208,28 @@ def active_player(state):
     st.write(f"You have {len(active_cards)} cards sent ... so far.")
     st.button('Refresh! Do I have more cards?')
 
-    if st.button('See your cards & WRITE (timer starts immediately!)'):
-        state.turn = 'writing'
-        with db_talker() as cur:
-            cur.execute("update turn set status='writing'")
-            cur.execute(f'update turn set time={datetime.timestamp(datetime.now())}')
+    if state.turn == 'accepting':
+        if st.button('See your cards & WRITE (timer starts immediately!)'):
+            state.turn = 'writing'
+            with db_talker() as cur:
+                cur.execute("update turn set status='writing'")
+                cur.execute(f'update turn set time={datetime.timestamp(datetime.now())}')
 
-    if state.turn == 'writing':
+    elif state.turn == 'writing':
         st.success('GO!')
         for card in active_cards:
             type, contents = card
             st.write(type + ' | ' + contents)
         timer(state)
 
-    if state.turn == 'judging':
+    elif state.turn == 'judging':
+        if 'writing_time' in state._state['data'].keys():
+            pass
+        else:
+            with db_talker() as cur:
+                cur.execute('select writing_time from turn')
+                state.writing_time = cur.fetchone()[0]
+
         minutes = str(round(state.writing_time // 60))
         seconds = str(round(state.writing_time % 60))
         if len(seconds) == 1:
@@ -233,7 +241,7 @@ def active_player(state):
             with db_talker() as cur:
                 cur.execute("update turn set status='passing'")
 
-    if state.turn == 'passing':
+    elif state.turn == 'passing':
         next_player = st.sidebar.selectbox('Next player is', ('aryan', 'caleb', 'chris', 'christian', 'mike', 'nick'))
         if st.sidebar.button('Pass to next player'):
             with db_talker() as cur:
@@ -273,8 +281,9 @@ def end_writing(state):
         t1 = cur.fetchone()[0]
         cur.execute('update cards set status=-1 where status=0')
 
-    t2 = datetime.timestamp(datetime.now())
-    state.writing_time = t2 - t1
+        t2 = datetime.timestamp(datetime.now())
+        state.writing_time = t2 - t1
+        cur.execute(f'update turn set writing_time={state.writing_time}')
 
 
 def show_columns(state):
@@ -282,12 +291,11 @@ def show_columns(state):
 
     # Left Column
     point_display = column_1.empty()
-    deck_buttons = {'Story time':'story', 'Give me a normal card':'normal', 'How about a special card':'special'}
+    deck_buttons = {'Give me a normal card':'normal', 'How about a special card':'special'}
     for text, deck in deck_buttons.items():
         if column_1.button(text):
             draw_card(state, deck)
 
-    # for action in ('Discard', 'Send'):
     if column_1.button('Discard'):
         for card_id, bool in state.selection.items():
             if bool == True:
