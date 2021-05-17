@@ -3,6 +3,7 @@ import os
 import discord
 from discord.ext import tasks, commands
 import psycopg2
+import urllib
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 

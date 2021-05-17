@@ -205,10 +205,11 @@ def active_player(state):
     with db_talker() as cur:
         cur.execute('select type, contents from cards where status=0')
         active_cards = cur.fetchall()
-    st.write(f"You have {len(active_cards)} cards sent ... so far.")
-    st.button('Refresh! Do I have more cards?')
+
 
     if state.turn == 'accepting':
+        st.write(f"You have {len(active_cards)} cards sent ... so far.")
+        st.button('Refresh! Do I have more cards?')
         if st.button('See your cards & WRITE (timer starts immediately!)'):
             state.turn = 'writing'
             with db_talker() as cur:
@@ -230,6 +231,10 @@ def active_player(state):
                 cur.execute('select writing_time from turn')
                 state.writing_time = cur.fetchone()[0]
 
+        for card in active_cards:
+            type, contents = card
+            st.write(type + ' | ' + contents)
+
         minutes = str(round(state.writing_time // 60))
         seconds = str(round(state.writing_time % 60))
         if len(seconds) == 1:
@@ -249,6 +254,7 @@ def active_player(state):
                 cur.execute(f"update players set active=true where name='{next_player}'")
                 cur.execute("update turn set status='accepting'")
                 cur.execute(f'update turn set time={datetime.timestamp(datetime.now())}')
+                cur.execute('update cards set status=-1 where status=0')
             state.turn='accepting'
 
 
@@ -256,7 +262,6 @@ def timer(state):
     with db_talker() as cur:
         cur.execute('select time from turn')
         t1 = cur.fetchone()[0]
-        cur.execute('update cards set status=-1 where status=0')
 
     time_display = st.empty()
     stop = st.button('stop writing')
@@ -267,11 +272,12 @@ def timer(state):
         seconds = str(round(time_elapsed % 60))
         if len(seconds) == 1:
             seconds = '0' + seconds
-        time_display.write(f'{minutes}:{seconds}')
+        time_display.error(f'{minutes}:{seconds}')
         sleep(1)
 
     state.turn = 'judging'
     end_writing(state)
+    return
 
 
 def end_writing(state):
@@ -279,7 +285,6 @@ def end_writing(state):
         cur.execute("update turn set status='judging'")
         cur.execute('select time from turn')
         t1 = cur.fetchone()[0]
-        cur.execute('update cards set status=-1 where status=0')
 
         t2 = datetime.timestamp(datetime.now())
         state.writing_time = t2 - t1
