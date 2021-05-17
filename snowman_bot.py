@@ -4,6 +4,7 @@ import discord
 from discord.ext import tasks, commands
 import psycopg2
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -47,29 +48,47 @@ bot = commands.Bot(command_prefix='!')
 
 @bot.event
 async def on_ready():
+    with db_talker() as cur:
+        cur.execute('select time from turn')
+        t1 = datetime.fromtimestamp(cur.fetchone()[0])
+        t2 = datetime.now()
+        t3 = t1 + timedelta(hours=48)
+        time_remaining = t3 - t2
 
-    # print(f'{client.user} has connected to Discord!')
-    # for guild in client.guilds:
-    #     if guild.name == GUILD:
-    #         break
+        cur.execute('select name from players where active=true')
+        active_player = cur.fetchone()[0]
 
-    # guild = discord.utils.find(lambda g: g.name == GUILD, client.guilds)
     guild = discord.utils.get(bot.guilds, name=GUILD)
     channels = bot.get_all_channels()
     channel_list = list()
     for channel in channels:
         channel_list.append(channel)
     general = bot.get_channel(843641902371700739)
-    print(
-        f'{bot.user} is connected to the following guild:\n'
-        f'{guild.name}(id: {guild.id})'
-    )
-    #
-    members = '\n - '.join([member.name for member in guild.members])
-    print(f'Guild Members:\n - {members}')
-    print(f'Channels: {channel_list}')
 
-    await general.send('Disconnecting, goodbye!!')
+    if time_remaining > timedelta(hours=24):
+        pass
+    elif time_remaining < timedelta(hours=24) and time_remaining > timedelta(hours=23):
+        await general.send(f'{active_player} has 24 hours left in their turn')
+    elif time_remaining < timedelta(hours=12) and time_remaining > timedelta(hours=11):
+        await general.send(f'{active_player} has 12 hours left in their turn')
+
+    # guild = discord.utils.get(bot.guilds, name=GUILD)
+    # channels = bot.get_all_channels()
+    # channel_list = list()
+    # for channel in channels:
+    #     channel_list.append(channel)
+    # general = bot.get_channel(843641902371700739)
+    # print(
+    #     f'{bot.user} is connected to the following guild:\n'
+    #     f'{guild.name}(id: {guild.id})'
+    # )
+    # #
+    # members = '\n - '.join([member.name for member in guild.members])
+    # print(f'Guild Members:\n - {members}')
+    # print(f'Channels: {channel_list}')
+
+    # await general.send('Disconnecting, goodbye!!')
+    await bot.close()
 
 # @tasks.loop(seconds=3)
 # async def myLoop():
@@ -93,5 +112,4 @@ async def on_ready():
 
 # myLoop.start()
 bot.run(TOKEN)
-bot.close()
 quit()
