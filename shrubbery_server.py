@@ -31,9 +31,10 @@ def main():
     # st.sidebar.write(repr(state.player.__dict__))
     #st.sidebar.markdown('### Agenda: ' + state.player.agenda.upper())
     rules = '''
-    3 influence to create a permanent card on the table
-    1 influence to create a suggestion
-    1 influence to highlight a passage
+    3 influence to create a permanent card on the table\n
+    1 influence to create a suggestion\n
+    1 influence to highlight a passage\n
+    1 influence to draw from the Impetus deck
     '''
     st.sidebar.write(rules)
     get_game_state(state)
@@ -335,7 +336,7 @@ def show_columns(state):
 
     with db_talker() as cur:
         cur.execute(f'''update players set points={real_points} where id={state.player.player_id}''')
-        cur.execuse(f'''update players set kudos={real_kudos} where id={state.player.player_id}''')
+        cur.execute(f'''update players set kudos={real_kudos} where id={state.player.player_id}''')
 
 #======================================================================================================================
 # Session State
