@@ -118,7 +118,7 @@ class player():
             self.player_id = cur.fetchone()[0]
 
             cur.execute(f'''select points, kudos from players where id={self.player_id}''')
-            self.points, self.kudos= cur.fetchone()[0]
+            self.points, self.kudos= cur.fetchone()
 
     def reset(self):
         self.cards = {}
