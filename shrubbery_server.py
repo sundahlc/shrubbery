@@ -27,13 +27,13 @@ def main():
     state = _get_state()
 
     loader_name = st.sidebar.text_input('name')
-    # if st.sidebar.button('Load me up Scottie'):
     load_player(state, loader_name)
     # st.sidebar.write(repr(state.player.__dict__))
-    st.sidebar.markdown('### Agenda: ' + state.player.agenda.upper())
+    #st.sidebar.markdown('### Agenda: ' + state.player.agenda.upper())
     rules = '''
-    7 points to create a card on the table\n
-    5 points to add a characteristic
+    3 influence to create a permanent card on the table
+    1 influence to create a suggestion
+    1 influence to highlight a passage
     '''
     st.sidebar.write(rules)
     get_game_state(state)
@@ -106,6 +106,7 @@ class player():
         self.cards = {}
         self.story = ''
         self.points = 5
+        self.kudos=10
         self.active = False
         self.agenda = ''
 
@@ -116,8 +117,8 @@ class player():
             cur.execute(f'''select id from players where name = '{self.name}' ''')
             self.player_id = cur.fetchone()[0]
 
-            cur.execute(f'''select points from players where id={self.player_id}''')
-            self.points = cur.fetchone()[0]
+            cur.execute(f'''select points, kudos from players where id={self.player_id}''')
+            self.points, self.kudos= cur.fetchone()[0]
 
     def reset(self):
         self.cards = {}
@@ -296,7 +297,9 @@ def show_columns(state):
 
     # Left Column
     point_display = column_1.empty()
-    deck_buttons = {'Give me a normal card':'normal', 'How about a special card':'special'}
+    kudos_display = column_1.empty()
+    # deck_buttons = {'Give me a normal card':'normal', 'How about a special card':'special'}
+    deck_buttons = {'Give me a normal card': 'normal','Impetus':'impetus'}
     for text, deck in deck_buttons.items():
         if column_1.button(text):
             draw_card(state, deck)
@@ -322,6 +325,7 @@ def show_columns(state):
         write_word(state)
 
     real_points = point_display.number_input('Points', value=state.player.points, min_value=0, step=1)
+    real_kudos = kudos_display.number_input('Kudos', value=state.player.kudos, min_value=0, step=1)
 
 
     # Right Column
@@ -331,6 +335,7 @@ def show_columns(state):
 
     with db_talker() as cur:
         cur.execute(f'''update players set points={real_points} where id={state.player.player_id}''')
+        cur.execuse(f'''update players set kudos={real_kudos} where id={state.player.player_id}''')
 
 #======================================================================================================================
 # Session State
