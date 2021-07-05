@@ -158,13 +158,16 @@ def load_player(state, name):
 
 def draw_card(state, deck):
     with db_talker() as cur:
-        cur.execute(f'''select id, contents, type from cards where deck = '{deck}' and status is NULL 
-                        order by random() limit 1''')
-        card_id, contents, type = cur.fetchone()
-        cur.execute(f"update cards set status = {state.player.player_id} where id = {card_id}")
-
-        state.player.points = state.player.points - 1
-        cur.execute(f'''update players set points={state.player.points} where id={state.player.player_id}''')
+        try:
+            cur.execute(f'''select id, contents, type from cards where deck = '{deck}' and status is NULL 
+                            order by random() limit 1''')
+            card_id, contents, type = cur.fetchone()
+            cur.execute(f"update cards set status = {state.player.player_id} where id = {card_id}")
+        except TypeError:
+            st.error('No more cards left in that deck!')
+            return
+        #state.player.points = state.player.points - 1
+        #cur.execute(f'''update players set points={state.player.points} where id={state.player.player_id}''')
         # cur.execute(f"insert into hands (player_id, card_id) values ({state.player.player_id}, {card_id}")
 
     state.player.cards[card_id] = type + ' | ' + contents
@@ -325,7 +328,7 @@ def show_columns(state):
     if state.write_card == True:
         write_word(state)
 
-    real_points = point_display.number_input('Points', value=state.player.points, min_value=0, step=1)
+    real_points = point_display.number_input('Influence', value=state.player.points, min_value=0, step=1)
     real_kudos = kudos_display.number_input('Kudos', value=state.player.kudos, min_value=0, step=1)
 
 
